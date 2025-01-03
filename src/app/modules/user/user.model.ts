@@ -60,8 +60,8 @@ userSchema.statics.isUserPasswordMatched = async function (
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
-  const isPasswordMatched = bcrypt.compareSync(password, user.password);
 
+  const isPasswordMatched = bcrypt.compareSync(password, user.password);
   if (!isPasswordMatched) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect password');
   }
