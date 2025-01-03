@@ -60,22 +60,28 @@ const registerUserService = async (payload: TRegisterUser) => {
     throw new AppError(httpStatus.BAD_REQUEST, 'Passwords do not match');
   }
 
-  // hash the password
-  const password = await bcrypt.hashSync(
-    payload.password,
-    Number(config.bcrypt_salt),
-  );
-
   // create user
 
   const result = await User.create({
     email: payload.email,
     name: payload.name,
-    password,
+    password: payload.password,
     role: 'normal',
   });
 
-  return result;
+  const refreshToken = createToken(
+    {
+      email: result.email,
+      role: result.role,
+    },
+    config.jwt_refresh_secret as string,
+    config.jwt_refresh_expiration as string,
+  );
+
+  return {
+    refreshToken,
+    result,
+  };
 };
 
 const changePasswordService = async (
@@ -138,7 +144,7 @@ const refreshTokenService = async (token: string) => {
     config.jwt_refresh_secret as string,
   ) as JwtPayload;
 
-  const { id: email, iat } = decoded;
+  const { email } = decoded;
 
   // Check if the user exists in the database
   if (!(await User.isUserExist(email))) {
