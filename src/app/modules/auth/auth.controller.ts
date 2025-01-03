@@ -57,11 +57,17 @@ const refreshToken = catchAsync(async (req, res) => {
 const registerUser = catchAsync(async (req, res) => {
   const result = await authService.registerUserService(req.body);
 
+  res.cookie('refreshToken', result.refreshToken, {
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production',
+    sameSite: 'none',
+  });
+
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
     message: 'User registered successfully',
-    data: result,
+    data: result.result,
   });
 });
 
