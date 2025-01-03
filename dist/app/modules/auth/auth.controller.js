@@ -31,7 +31,7 @@ const sendResponse_1 = require("../../utils/sendResponse");
 const auth_service_1 = require("./auth.service");
 const loginUser = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.authService.loginUserService(req.body);
-    const { accessToken, refreshToken, needsPasswordChange } = result;
+    const { accessToken, refreshToken } = result;
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: config_1.default.NODE_ENV === 'production',
@@ -43,7 +43,6 @@ const loginUser = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, v
         message: 'User logged in successfully',
         data: {
             accessToken,
-            needsPasswordChange,
         },
     });
 }));
@@ -66,8 +65,18 @@ const refreshToken = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
+const registerUser = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield auth_service_1.authService.registerUserService(req.body);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: http_status_1.default.CREATED,
+        message: 'User registered successfully',
+        data: result,
+    });
+}));
 exports.authController = {
     loginUser,
     changePassword,
     refreshToken,
+    registerUser,
 };
