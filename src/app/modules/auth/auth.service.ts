@@ -4,34 +4,32 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../Errors/AppError';
 import { User } from '../user/user.model';
-import { TLoginUser } from './auth.interface';
+import { TLoginUser, TRegisterUser } from './auth.interface';
 import { createToken } from './auth.utils';
+
 const loginUserService = async (payload: TLoginUser) => {
   // Check if the user exists in the database
-  if (!(await User.isUserExistByCustomId(payload.id))) {
+  if (!(await User.isUserExist(payload.email))) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
   // check if user is deleted
 
-  if (await User.isUserDeleted(payload.id)) {
+  if (await User.isUserDeleted(payload.email)) {
     throw new AppError(httpStatus.BAD_REQUEST, 'User is deleted');
-  }
-
-  // check if user is blocked
-
-  if (await User.isUserBlocked(payload.id)) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'User is blocked');
   }
 
   // Check if the password is correct
 
-  const user = await User.isUserPasswordMatched(payload.id, payload.password);
+  const user = await User.isUserPasswordMatched(
+    payload.email,
+    payload.password,
+  );
 
   // create jwt token
 
   const jwtPayload = {
-    id: user.id,
+    email: user.email,
     role: user.role,
   };
 
@@ -49,9 +47,35 @@ const loginUserService = async (payload: TLoginUser) => {
 
   return {
     accessToken,
-    needsPasswordChange: user?.needsPasswordChange,
     refreshToken,
   };
+};
+
+const registerUserService = async (payload: TRegisterUser) => {
+  // Check if the user exists in the database
+  if (await User.isUserExist(payload.email)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'User already exists');
+  }
+  if (payload.password !== payload.confirmPassword) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Passwords do not match');
+  }
+
+  // hash the password
+  const password = await bcrypt.hashSync(
+    payload.password,
+    Number(config.bcrypt_salt),
+  );
+
+  // create user
+
+  const result = await User.create({
+    email: payload.email,
+    name: payload.name,
+    password,
+    role: 'normal',
+  });
+
+  return result;
 };
 
 const changePasswordService = async (
@@ -62,26 +86,20 @@ const changePasswordService = async (
   },
 ) => {
   // Check if the user exists in the database
-  if (!(await User.isUserExistByCustomId(userData.id))) {
+  if (!(await User.isUserExist(userData.email))) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
   // check if user is deleted
 
-  if (await User.isUserDeleted(userData.id)) {
+  if (await User.isUserDeleted(userData.email)) {
     throw new AppError(httpStatus.BAD_REQUEST, 'User is deleted');
-  }
-
-  // check if user is blocked
-
-  if (await User.isUserBlocked(userData.id)) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'User is blocked');
   }
 
   // Check if the password is correct
 
   const user = await User.isUserPasswordMatched(
-    userData.id,
+    userData.email,
     payload.oldPassword,
   );
 
@@ -99,13 +117,11 @@ const changePasswordService = async (
 
   await User.findOneAndUpdate(
     {
-      id: userData.id,
+      email: userData.email,
       role: userData.role,
     },
     {
       password: newPassword,
-      needsPasswordChange: false,
-      passwordChangedAt: new Date(),
     },
     {
       new: true,
@@ -122,46 +138,23 @@ const refreshTokenService = async (token: string) => {
     config.jwt_refresh_secret as string,
   ) as JwtPayload;
 
-  const { id, iat } = decoded;
+  const { id: email, iat } = decoded;
 
   // Check if the user exists in the database
-  if (!(await User.isUserExistByCustomId(id))) {
+  if (!(await User.isUserExist(email))) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
   // check if user is deleted
 
-  if (await User.isUserDeleted(id)) {
+  if (await User.isUserDeleted(email)) {
     throw new AppError(httpStatus.BAD_REQUEST, 'User is deleted');
-  }
-
-  // check if user is blocked
-
-  if (await User.isUserBlocked(id)) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'User is blocked');
-  }
-
-  // check if the password was changed after the token was issued
-
-  const user = await User.findOne({ id });
-
-  if (
-    user?.passwordChangedAt &&
-    (await User.isJWTIssuedBeforePasswordChange(
-      user.passwordChangedAt,
-      iat as number,
-    ))
-  ) {
-    throw new AppError(
-      httpStatus.UNAUTHORIZED,
-      'Password was changed. Please login again',
-    );
   }
 
   // create jwt token
 
   const jwtPayload = {
-    id: decoded.id,
+    email: decoded.email,
     role: decoded.role,
   };
 
@@ -180,4 +173,5 @@ export const authService = {
   loginUserService,
   changePasswordService,
   refreshTokenService,
+  registerUserService,
 };

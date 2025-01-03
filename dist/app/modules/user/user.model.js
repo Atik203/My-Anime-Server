@@ -19,29 +19,20 @@ const mongoose_1 = require("mongoose");
 const config_1 = __importDefault(require("../../config"));
 const AppError_1 = __importDefault(require("../../Errors/AppError"));
 exports.userSchema = new mongoose_1.Schema({
-    id: {
+    name: {
         type: String,
-        unique: true,
     },
     password: {
         type: String,
         select: 0,
     },
-    needsPasswordChange: {
-        type: Boolean,
-        default: true,
-    },
-    passwordChangedAt: {
-        type: Date,
+    email: {
+        type: String,
+        unique: true,
     },
     role: {
         type: String,
-        enum: ['admin', 'student', 'faculty'],
-    },
-    status: {
-        type: String,
-        enum: ['in-progress', 'blocked'],
-        default: 'in-progress',
+        enum: ['admin', 'normal'],
     },
     isDeleted: {
         type: Boolean,
@@ -61,27 +52,15 @@ exports.userSchema.post('save', function (doc, next) {
     doc.password = '';
     next();
 });
-exports.userSchema.statics.isUserExistByCustomId = function (id) {
+exports.userSchema.statics.isUserDeleted = function (email) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = yield this.findOne({ id });
-        return !!user; // !!user === user ? true : false
-    });
-};
-exports.userSchema.statics.isUserDeleted = function (id) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const user = yield this.findOne({ id });
+        const user = yield this.findOne({ email });
         return user === null || user === void 0 ? void 0 : user.isDeleted;
     });
 };
-exports.userSchema.statics.isUserBlocked = function (id) {
+exports.userSchema.statics.isUserPasswordMatched = function (email, password) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = yield this.findOne({ id });
-        return (user === null || user === void 0 ? void 0 : user.status) === 'blocked';
-    });
-};
-exports.userSchema.statics.isUserPasswordMatched = function (id, password) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const user = yield this.findOne({ id }).select('+password');
+        const user = yield this.findOne({ email }).select('+password');
         if (!user) {
             throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
         }
@@ -92,9 +71,10 @@ exports.userSchema.statics.isUserPasswordMatched = function (id, password) {
         return user;
     });
 };
-exports.userSchema.statics.isJWTIssuedBeforePasswordChange = function (passwordChangeTimeStamp, jwtIssuedTimeStamp) {
+exports.userSchema.statics.isUserExist = function (email) {
     return __awaiter(this, void 0, void 0, function* () {
-        return passwordChangeTimeStamp.getTime() / 1000 > jwtIssuedTimeStamp;
+        const user = yield this.findOne({ email });
+        return !!user;
     });
 };
 exports.User = (0, mongoose_1.model)('User', exports.userSchema);

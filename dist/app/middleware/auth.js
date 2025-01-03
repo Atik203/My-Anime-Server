@@ -28,25 +28,16 @@ const auth = (...requiredRoles) => {
         }
         // verify token
         const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
-        const { role, id, iat } = decoded;
+        const { role, email } = decoded;
         // Check if the user exists in the database
-        if (!(yield user_model_1.User.isUserExistByCustomId(id))) {
+        if (!(yield user_model_1.User.isUserExist(email))) {
             throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
         }
         // check if user is deleted
-        if (yield user_model_1.User.isUserDeleted(id)) {
+        if (yield user_model_1.User.isUserDeleted(email)) {
             throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'User is deleted');
         }
-        // check if user is blocked
-        if (yield user_model_1.User.isUserBlocked(id)) {
-            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'User is blocked');
-        }
         // check if the password was changed after the token was issued
-        const user = yield user_model_1.User.findOne({ id });
-        if ((user === null || user === void 0 ? void 0 : user.passwordChangedAt) &&
-            (yield user_model_1.User.isJWTIssuedBeforePasswordChange(user.passwordChangedAt, iat))) {
-            throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'Password was changed. Please login again');
-        }
         if (requiredRoles && !requiredRoles.includes(role)) {
             throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'You are not authorized');
         }
