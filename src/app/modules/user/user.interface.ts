@@ -5,7 +5,7 @@ export interface TUser {
   name: string;
   email: string;
   password: string;
-  role: 'admin' | 'normal';
+  role: 'admin' | 'normal' | 'superAdmin';
   isDeleted: boolean;
 }
 
