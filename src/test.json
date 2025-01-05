@@ -1,0 +1,29 @@
+// 20250105232532
+// http://localhost:5000/anime?url=https://myanime.live/2025/01/05/mushen-ji-tales-of-herding-gods-episode-12-eng-sub/
+
+{
+  "title": "Mushen Ji - Tales Of Herding Gods",
+  "description": "Server Dailymotion ( A lot of ads )",
+  "episode": "Episode 12",
+  "streamingLinks": [
+    {
+      "source": "Server Dailymotion",
+      "server": "dailymotion",
+      "link": "https://geo.dailymotion.com/player.html?video=kK61i6SFSbeH5gCaKfc&"
+    },
+    {
+      "source": "Server OK.ru",
+      "server": "ok.ru",
+      "link": "https://ok.ru/videoembed/9306084543050?nochat=1"
+    },
+    {
+      "source": "Server YouTube",
+      "server": "youtube",
+      "link": "https://www.youtube.com/embed/videoseries?list=PLBakWosU0sfjzq5MHaM7L_y7RzT6tGfps"
+    }
+  ],
+  "releaseDate": "2025-01-05",
+  "slug": "2025/01/05/mushen-ji-tales-of-herding-gods-episode-12-eng-sub/",
+  "nextEpisode": "Not release yet", // check if the next episode is available upto 10 days from release date if get not found or get the {"error":"...} response then it's not available
+  "previousEpisode": "2024/12/31/mushen-ji-tales-of-herding-gods-episode-11-eng-sub/" // same as next episode check if the previous episode is available upto 10 days from release date in reverse way as it is previous eposive if get not found or get the {"error":"...} response then it's not available
+}
