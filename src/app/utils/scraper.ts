@@ -1,7 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-// Interface for the anime details
 interface AnimeDetails {
   title: string;
   description: string;
