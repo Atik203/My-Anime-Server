@@ -5,7 +5,8 @@ import * as cheerio from 'cheerio';
 interface AnimeDetails {
   title: string;
   description: string;
-  streamingLinks: { source: string; link: string }[];
+  episode: string;
+  streamingLinks: { source: string; server: string; link: string }[];
   releaseDate: string;
   slug: string;
   nextEpisode: string | null;
@@ -36,12 +37,12 @@ export const fetchAnimeDetails = async (
 
     const $ = cheerio.load(html, null, false);
 
-    // Scrape title, description, and release date
-    const title = $('h1.entry-title').text().trim() || 'Unknown Title';
-    const description =
-      $('div.entry-content > p').first().text().trim() || 'No Description';
+    const description = (() => {
+      const pTag = $('div.entry-content p').eq(2); // Select the third <p> tag (index starts from 0)
+      pTag.find('mark.has-inline-color.has-vivid-cyan-blue-color').remove(); // Remove the <mark> tag
+      return pTag.text().trim() || 'No Description';
+    })();
     const releaseDate = $('time.entry-date').attr('datetime') || '';
-    console.log('Release Date:', releaseDate); // Log the release date for debugging
 
     // Parse the release date directly from the datetime attribute
     const releaseDateObj = new Date(releaseDate);
@@ -55,22 +56,38 @@ export const fetchAnimeDetails = async (
       .join('/')
       .replace(/-english-sub$/, ''); // Clean up the suffix
 
+    // Extract title from the URL or slug after the date part
+    const title = slug
+      .split('/')
+      .slice(3)
+      .join(' ')
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    // Extract episode number from the URL
+    const episodeMatch = url.match(/episode-(\d+)/i);
+    const episode = episodeMatch
+      ? `Episode ${episodeMatch[1]}`
+      : 'Unknown Episode';
+
     // Scrape streaming links
-    const streamingLinks: { source: string; link: string }[] = [];
+    const streamingLinks: { source: string; server: string; link: string }[] =
+      [];
     $('iframe').each((_, element) => {
       const src = $(element).attr('src');
       if (src && isRelevantLink(src)) {
-        const source = src.includes('dailymotion')
-          ? 'Dailymotion'
+        const server = src.includes('dailymotion')
+          ? 'dailymotion'
           : src.includes('youtube')
-            ? 'YouTube'
+            ? 'youtube'
             : src.includes('ok.ru')
-              ? 'OK.ru'
+              ? 'ok.ru'
               : src.includes('buibui')
-                ? 'Buibui'
-                : 'Unknown';
+                ? 'buibui'
+                : 'unknown';
         streamingLinks.push({
-          source: `Server ${source}`,
+          source: `Server ${server.charAt(0).toUpperCase() + server.slice(1)}`,
+          server,
           link: src.startsWith('//') ? `https:${src}` : src,
         });
       }
@@ -79,29 +96,29 @@ export const fetchAnimeDetails = async (
     // Format release date to only include the date (no time)
     const formattedReleaseDate = releaseDateObj.toISOString().split('T')[0]; // Example: "2025-01-05"
 
-    // Construct next and previous episode slugs
-    const nextEpisodeDate = new Date(releaseDateObj);
-    nextEpisodeDate.setDate(nextEpisodeDate.getDate() + 1);
+    // Ensure episodeMatch is defined and extract the episode number
+    if (!episodeMatch || episodeMatch.length < 2) {
+      throw new Error('Episode number not found in URL');
+    }
+    const episodeNumber = parseInt(episodeMatch[1]);
 
-    const previousEpisodeDate = new Date(releaseDateObj);
-    previousEpisodeDate.setDate(previousEpisodeDate.getDate() - 1);
-
-    const formatSlug = (date: Date): string => {
-      const formattedDate = `${date.getFullYear()}/${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      return `/${formattedDate}/${slug}`;
-    };
+    // Extract the relevant part of the slug for searching
+    const slugWithoutDate = slug.split('/').slice(3).join('/');
 
     // Validate next and previous episodes
-    const nextEpisode = await getNextEpisode(formatSlug(nextEpisodeDate));
+    const nextEpisode = await getNextEpisode(
+      slugWithoutDate,
+      episodeNumber + 1,
+    );
     const previousEpisode = await getPreviousEpisode(
-      formatSlug(previousEpisodeDate),
+      slugWithoutDate,
+      episodeNumber - 1,
     );
 
     return {
       title,
       description,
+      episode,
       streamingLinks,
       releaseDate: formattedReleaseDate,
       slug,
@@ -109,58 +126,71 @@ export const fetchAnimeDetails = async (
       previousEpisode,
     };
   } catch (error) {
-    console.error('Error fetching anime details:', error.message);
+    if (error instanceof Error) {
+      console.error('Error fetching anime details:', error.message);
+    } else {
+      console.error('Error fetching anime details:', error);
+    }
     return null;
   }
 };
 
-// Get next episode by checking up to 10 days
-const getNextEpisode = async (slug: string): Promise<string | null> => {
-  for (let i = 0; i < 10; i++) {
-    const nextEpisodeSlug = `${slug}`;
-    const episodeExists = await validateEpisode(nextEpisodeSlug);
-    if (episodeExists) {
-      return nextEpisodeSlug;
-    }
-    // Move to the next day
-    const nextDate = new Date(slug.split('/')[1]);
-    nextDate.setDate(nextDate.getDate() + 1);
-    slug = `${nextDate.getFullYear()}/${(nextDate.getMonth() + 1).toString().padStart(2, '0')}/${nextDate.getDate().toString().padStart(2, '0')}/${slug.split('/')[3]}`;
+// Get next episode by checking up to 10 episodes
+const getNextEpisode = async (
+  slug: string,
+  episodeNumber: number,
+): Promise<string | null> => {
+  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
+  const searchUrl = `https://myanime.live/?s=${searchQuery}`;
+  const episodeExists = await validateEpisode(searchUrl);
+  if (episodeExists) {
+    return episodeExists;
   }
-  return 'Episode is not released yet';
+
+  return 'Not release yet';
 };
 
-// Get previous episode by checking up to 10 days
-const getPreviousEpisode = async (slug: string): Promise<string | null> => {
-  for (let i = 0; i < 10; i++) {
-    const previousEpisodeSlug = `${slug}`;
-    const episodeExists = await validateEpisode(previousEpisodeSlug);
-    if (episodeExists) {
-      return previousEpisodeSlug;
-    }
-    // Move to the previous day
-    const previousDate = new Date(slug.split('/')[1]);
-    previousDate.setDate(previousDate.getDate() - 1);
-    slug = `${previousDate.getFullYear()}/${(previousDate.getMonth() + 1).toString().padStart(2, '0')}/${previousDate.getDate().toString().padStart(2, '0')}/${slug.split('/')[3]}`;
+// Get previous episode by checking up to 10 episodes
+const getPreviousEpisode = async (
+  slug: string,
+  episodeNumber: number,
+): Promise<string | null> => {
+  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
+  const searchUrl = `https://myanime.live/?s=${searchQuery}`;
+  const episodeExists = await validateEpisode(searchUrl);
+  if (episodeExists) {
+    return episodeExists;
   }
-  return 'Episode is not released yet';
+
+  return 'Not release yet';
 };
 
 // Validate if episode exists
-const validateEpisode = async (slug: string): Promise<string | null> => {
+const validateEpisode = async (searchUrl: string): Promise<string | null> => {
   try {
-    const url = `https://myanime.live${slug}`;
-    const response = await axios.get(url, {
+    const response = await axios.get(searchUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
     });
-    if (response.status === 200) {
-      return slug;
+
+    const $ = cheerio.load(response.data);
+    const episodeLink = $('h2.entry-header-title a').attr('href');
+    if (episodeLink) {
+      return episodeLink;
+      // Extract the slug from the episode link
+      //   const slugMatch = episodeLink.match(/\/(\d{4}\/\d{2}\/\d{2}\/[^/]+)\/$/);
+      //   if (slugMatch && slugMatch[1]) {
+      //     const slug = slugMatch[1];
+      //     console.log('extracted slug', slug);
+      //     return `${slug}`;
+      //   }
     }
     return null;
-  } catch {
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    console.error('Error validating episode:', errorMessage);
     return null;
   }
 };
