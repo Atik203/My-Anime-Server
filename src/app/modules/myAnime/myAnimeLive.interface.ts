@@ -12,8 +12,9 @@ export interface TAnimeDetails {
 }
 
 export interface TExternalAPi extends TAnimeDetails {
-  schedule: { day: string[]; time: string };
+  schedule: { day: string[] };
   status: 'ongoing' | 'completed';
   isDeleted: boolean;
   user: Types.ObjectId;
+  image: string;
 }
