@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { AnimeDetails } from './myAnimeLive.interface';
+import { TAnimeDetails } from './myAnimeLive.interface';
 import { getNextEpisode, getPreviousEpisode } from './myAnimeLive.utils';
 
 // Helper to determine if a link is relevant
@@ -16,7 +16,7 @@ const isRelevantLink = (link: string): boolean => {
 // Function to fetch anime details
 export const fetchAnimeDetails = async (
   url: string,
-): Promise<AnimeDetails | null> => {
+): Promise<TAnimeDetails | null> => {
   try {
     const { data: html } = await axios.get(url, {
       headers: {
