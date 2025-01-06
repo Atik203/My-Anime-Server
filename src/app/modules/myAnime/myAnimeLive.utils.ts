@@ -18,14 +18,15 @@ export const validateEpisode = async (
     const episodeLink = $('h2.entry-header-title a').attr('href');
     console.log('episode link:', episodeLink);
     if (episodeLink) {
-      return episodeLink;
-      // Extract the slug from the episode link
-      //   const slugMatch = episodeLink.match(/\/(\d{4}\/\d{2}\/\d{2}\/[^/]+)\/$/);
-      //   if (slugMatch && slugMatch[1]) {
-      //     const slug = slugMatch[1];
-      //     console.log('extracted slug', slug);
-      //     return `${slug}`;
-      //   }
+      const slugMatch = episodeLink.match(/\/(\d{4}\/\d{2}\/\d{2}\/[^/]+)\/$/);
+      if (slugMatch && slugMatch[1]) {
+        const slug = slugMatch[1];
+        // remove the / at the end of the slug
+
+        const newSlug = slug.replace(/\/$/, ''); // remove the / at the end of the slug
+
+        return `${newSlug}`;
+      }
     }
     return null;
   } catch (error) {

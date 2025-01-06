@@ -12,6 +12,17 @@ const saveExternalApiData = async (data: TExternalAPi, user: JwtPayload) => {
 
   const getUser = await User.findOne({ email: user.email });
 
+  // check if there save data already using slug
+
+  const isDataExist = await ExternalApi.findOne({
+    slug: data.slug,
+    user: getUser?._id,
+  });
+
+  if (isDataExist) {
+    throw new AppError(httpStatus.CONFLICT, 'Data already exist');
+  }
+
   const result = await ExternalApi.create({
     ...data,
     user: getUser?._id,
@@ -35,7 +46,20 @@ const getUserExternalApiData = async (user: JwtPayload) => {
   return result;
 };
 
+const getSingleExternalApiData = async (slug: string, user: JwtPayload) => {
+  if (!(await User.isUserExist(user.email))) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  const getUser = await User.findOne({ email: user.email });
+
+  const result = await ExternalApi.findOne({ slug, user: getUser?._id });
+
+  return result;
+};
+
 export const externalApiService = {
   saveExternalApiData,
   getUserExternalApiData,
+  getSingleExternalApiData,
 };
