@@ -28,4 +28,10 @@ router.post(
   externalApiController.getSingleExternalApiData,
 );
 
+router.post(
+  '/delete-previous-ep',
+  auth('admin', 'normal', 'superAdmin'),
+  externalApiController.deletePreviousEpisode,
+);
+
 export const externalApiRoutes = router;

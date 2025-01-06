@@ -58,8 +58,28 @@ const getSingleExternalApiData = async (slug: string, user: JwtPayload) => {
   return result;
 };
 
+const deletePreviousEpisode = async (slug: string, user: JwtPayload) => {
+  if (!(await User.isUserExist(user.email))) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  const getUser = await User.findOne({ email: user.email });
+
+  const result = await ExternalApi.findOneAndDelete({
+    slug,
+    user: getUser?._id,
+  });
+
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Data not found');
+  }
+
+  return result;
+};
+
 export const externalApiService = {
   saveExternalApiData,
   getUserExternalApiData,
   getSingleExternalApiData,
+  deletePreviousEpisode,
 };

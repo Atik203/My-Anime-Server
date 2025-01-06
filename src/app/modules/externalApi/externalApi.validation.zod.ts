@@ -23,9 +23,9 @@ export const saveExternalApiDataSchema = z.object({
     previousEpisode: z.string().nullable(),
     schedule: z.object({
       day: z.array(z.string()),
-      time: z.string(),
     }),
     status: z.nativeEnum(Status),
     isDeleted: z.boolean().default(false),
+    image: z.string(),
   }),
 });

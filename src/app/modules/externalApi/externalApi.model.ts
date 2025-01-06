@@ -37,12 +37,12 @@ export const externalApiSchema = new Schema<TExternalAPi>(
     previousEpisode: {
       type: String,
     },
+    image: {
+      type: String,
+    },
     schedule: {
       day: {
         type: [String],
-      },
-      time: {
-        type: String,
       },
     },
     status: {
