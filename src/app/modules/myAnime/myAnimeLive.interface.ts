@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 export interface TAnimeDetails {
   title: string;
   description: string;
@@ -13,4 +15,5 @@ export interface TExternalAPi extends TAnimeDetails {
   schedule: { day: string[]; time: string };
   status: 'ongoing' | 'completed';
   isDeleted: boolean;
+  user: Types.ObjectId;
 }

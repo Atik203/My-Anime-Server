@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { TExternalAPi } from './myAnimeLive.interface';
+import { TExternalAPi } from '../myAnime/myAnimeLive.interface';
 
 export const externalApiSchema = new Schema<TExternalAPi>(
   {
@@ -52,6 +52,10 @@ export const externalApiSchema = new Schema<TExternalAPi>(
     isDeleted: {
       type: Boolean,
       default: false,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   {
