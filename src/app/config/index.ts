@@ -20,4 +20,6 @@ export default {
   cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
   cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
   super_admin_password: process.env.SUPER_ADMIN_PASSWORD,
+  my_anime_live_url: process.env.MY_ANIME_LIVE_URL,
+  anime_api_url: process.env.ANIME_API_URL,
 };
