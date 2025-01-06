@@ -40,11 +40,13 @@ export const fetchAnimeDetails = async (
       throw new Error('Invalid date value');
     }
 
-    const slug = url
+    const slugWithLastSlash = url
       .split('/') // example: /2024/12/10/wu-shen-zhu-zai-martial-master-episode-497-english-sub/
       .slice(3) // slice to keep only the path after /2024/12/10/
       .join('/')
       .replace(/-english-sub$/, ''); // Clean up the suffix
+
+    const slug = slugWithLastSlash.replace(/\/$/, ''); // remove the / at the end of the slug
 
     // Extract title from the URL or slug after the date part
     const title = slug

@@ -13,20 +13,21 @@ export const validateEpisode = async (
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
     });
-    console.log('search url:', searchUrl);
+
     const $ = cheerio.load(response.data);
     const episodeLink = $('h2.entry-header-title a').attr('href');
-    console.log('episode link:', episodeLink);
     if (episodeLink) {
-      const slugMatch = episodeLink.match(/\/(\d{4}\/\d{2}\/\d{2}\/[^/]+)\/$/);
-      if (slugMatch && slugMatch[1]) {
-        const slug = slugMatch[1];
-        // remove the / at the end of the slug
+      const newSlug = episodeLink.replace(/\/$/, '');
+      return newSlug;
+      // const slugMatch = episodeLink.match(/\/(\d{4}\/\d{2}\/\d{2}\/[^/]+)\/$/);
+      // if (slugMatch && slugMatch[1]) {
+      //   const slug = slugMatch[1];
+      //   // remove the / at the end of the slug
 
-        const newSlug = slug.replace(/\/$/, ''); // remove the / at the end of the slug
+      // remove the / at the end of the slug
 
-        return `${newSlug}`;
-      }
+      //   return `${newSlug}`;
+      // }
     }
     return null;
   } catch (error) {
