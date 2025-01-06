@@ -22,4 +22,10 @@ router.get(
   externalApiController.getUserExternalApiData,
 );
 
+router.post(
+  '/my-data/single',
+  auth('admin', 'normal', 'superAdmin'),
+  externalApiController.getSingleExternalApiData,
+);
+
 export const externalApiRoutes = router;
