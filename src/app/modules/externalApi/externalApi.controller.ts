@@ -56,8 +56,32 @@ const getSingleExternalApiData = catchAsync(async (req, res) => {
   });
 });
 
+const deletePreviousEpisode = catchAsync(async (req, res) => {
+  const user = req.user;
+  const { slug } = req.body;
+  if (!slug) {
+    sendResponse(res, {
+      success: false,
+      statusCode: 400,
+      message: 'Slug is required',
+      data: null,
+    });
+    return;
+  }
+
+  const result = await externalApiService.deletePreviousEpisode(slug, user);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Data deleted successfully',
+    data: result,
+  });
+});
+
 export const externalApiController = {
   saveExternalApi,
   getUserExternalApiData,
   getSingleExternalApiData,
+  deletePreviousEpisode,
 };
