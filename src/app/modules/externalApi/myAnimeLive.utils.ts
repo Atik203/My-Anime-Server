@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import config from '../../config';
 
 // Validate if episode exists
 export const validateEpisode = async (
@@ -39,7 +40,7 @@ export const getNextEpisode = async (
   episodeNumber: number,
 ): Promise<string | null> => {
   const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
-  const searchUrl = `https://myanime.live/?s=${searchQuery}`;
+  const searchUrl = `${config.my_anime_live_url}/?s=${searchQuery}`;
   const episodeExists = await validateEpisode(searchUrl);
   if (episodeExists) {
     return episodeExists;
@@ -54,7 +55,7 @@ export const getPreviousEpisode = async (
   episodeNumber: number,
 ): Promise<string | null> => {
   const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
-  const searchUrl = `https://myanime.live/?s=${searchQuery}`;
+  const searchUrl = `${config.my_anime_live_url}/?s=${searchQuery}`;
   const episodeExists = await validateEpisode(searchUrl);
   if (episodeExists) {
     return episodeExists;
