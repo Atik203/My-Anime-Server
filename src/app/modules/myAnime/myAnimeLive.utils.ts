@@ -13,9 +13,10 @@ export const validateEpisode = async (
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
     });
-
+    console.log('search url:', searchUrl);
     const $ = cheerio.load(response.data);
     const episodeLink = $('h2.entry-header-title a').attr('href');
+    console.log('episode link:', episodeLink);
     if (episodeLink) {
       return episodeLink;
       // Extract the slug from the episode link
@@ -39,7 +40,11 @@ export const getNextEpisode = async (
   slug: string,
   episodeNumber: number,
 ): Promise<string | null> => {
-  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
+  let ep = episodeNumber.toString();
+  if (episodeNumber < 10) {
+    ep = ep.padStart(2, '0');
+  }
+  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${ep}`)}`;
   const searchUrl = `${config.my_anime_live_url}/?s=${searchQuery}`;
   const episodeExists = await validateEpisode(searchUrl);
   if (episodeExists) {
@@ -54,7 +59,12 @@ export const getPreviousEpisode = async (
   slug: string,
   episodeNumber: number,
 ): Promise<string | null> => {
-  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${episodeNumber}`)}`;
+  let ep = episodeNumber.toString();
+  if (episodeNumber < 10) {
+    ep = ep.padStart(2, '0');
+  }
+
+  const searchQuery = `${slug.replace(/episode-\d+/, `episode-${ep}`)}`;
   const searchUrl = `${config.my_anime_live_url}/?s=${searchQuery}`;
   const episodeExists = await validateEpisode(searchUrl);
   if (episodeExists) {
