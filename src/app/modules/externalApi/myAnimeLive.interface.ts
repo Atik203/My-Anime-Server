@@ -1,4 +1,4 @@
-export interface AnimeDetails {
+export interface TAnimeDetails {
   title: string;
   description: string;
   episode: string;
@@ -7,4 +7,10 @@ export interface AnimeDetails {
   slug: string;
   nextEpisode: string | null;
   previousEpisode: string | null;
+}
+
+export interface TExternalAPi extends TAnimeDetails {
+  schedule: { day: string[]; time: string };
+  status: 'ongoing' | 'completed';
+  isDeleted: boolean;
 }
