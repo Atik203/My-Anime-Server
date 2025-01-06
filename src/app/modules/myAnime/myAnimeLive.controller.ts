@@ -3,7 +3,7 @@ import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
 import { fetchAnimeDetails } from './myAnimeLive.service';
 
-const myAnimeLiveController = catchAsync(async (req, res) => {
+export const myAnimeLiveController = catchAsync(async (req, res) => {
   const { url } = req.query;
 
   if (!url) {
@@ -34,5 +34,3 @@ const myAnimeLiveController = catchAsync(async (req, res) => {
     data: animeDetails,
   });
 });
-
-export const externalApiController = { myAnimeLiveController };
