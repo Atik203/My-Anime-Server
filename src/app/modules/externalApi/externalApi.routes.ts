@@ -7,7 +7,7 @@ import { saveExternalApiDataSchema } from './externalApi.validation.zod';
 
 const router = express.Router();
 
-router.get('/', myAnimeLiveController);
+router.post('/', myAnimeLiveController);
 
 router.post(
   '/save',
